@@ -20,7 +20,7 @@ def extract_function_definitions(file_content):
         # it also ends any previous definition
         _deco_match = re.match(r'^@[a-z_]+', _line)
         _def_match = re.match(r'def\ ([a-z_]+)\(', _line)
-        _unindented_match = re.match(r'^[a-z_]', _line)
+        _unindented_match = re.match(r'^\S', _line)
         if _def_match or _deco_match or _unindented_match:
             if _key is not None:
                 _snippet = KeySnippet(
