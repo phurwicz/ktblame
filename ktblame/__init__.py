@@ -126,8 +126,8 @@ class StreamlitHelper:
             st.caption(commit.message.strip())
 
     def format_commit(commit, ref_hexsha):
-        blamed_change = '+' * 10 if commit.hexsha == ref_hexsha else commit.hexsha[:10]
-        commit_str = f"{blamed_change:>10} |{commit.author.name[:10]:>10} @{commit.committed_datetime.strftime('%Y-%m-%d %H:%M')}"
+        blamed_change = '+' * 7 if commit.hexsha == ref_hexsha else commit.hexsha[:7]
+        commit_str = f"{blamed_change:>7} |{commit.author.name[:10]:>10} @{commit.committed_datetime.strftime('%Y-%m-%d')}"
         return commit_str
 
     @staticmethod
@@ -135,12 +135,12 @@ class StreamlitHelper:
         import streamlit as st
         main_params = dict()
         with st.sidebar:
-            repo_path = st.text_input("Repository path", value=".")
+            repo_path = st.text_input("Repository path", value="./")
             blamer = StreamlitHelper.load_blamer(repo_path)
             main_params['blamer'] = blamer
 
             with st.form("submit"):
-                file_path = st.text_input("File path", value="app.py")
+                file_path = st.text_input("File path", value="example-streamlit-app.py")
                 kv_func_key = st.selectbox("Extractor", kv_functions.keys())
                 submitted = st.form_submit_button("Submit", type="primary")
 
@@ -164,6 +164,7 @@ class StreamlitHelper:
     @staticmethod
     def default_main(kv_functions):
         import streamlit as st
+
         main_params = StreamlitHelper.default_sidebar(kv_functions)
 
         if not main_params['ready_flag']:
@@ -174,11 +175,16 @@ class StreamlitHelper:
         selected_commit = main_params['selected_commit']
 
         StreamlitHelper.commit_overview(selected_commit)
-        display_lines = []
+        display_lines, prev_commit, filler_length = [], None, 0
         for _blamedline in blamer.blame(selected_key, selected_commit.hexsha):
-            _lastcommit = blamer.commits[_blamedline.hexsha]
-            _display = f"{StreamlitHelper.format_commit(_lastcommit, selected_commit.hexsha)} |{_blamedline.line}"
+            _linecommit = blamer.commits[_blamedline.hexsha]
+            if _linecommit != prev_commit:
+                _linedesc = StreamlitHelper.format_commit(_linecommit, selected_commit.hexsha)
+                prev_commit, filler_length = _linecommit, len(_linedesc)
+            else:
+                _linedesc = ' ' * filler_length
+            _display = f"{_linedesc}|{_blamedline.line}"
             display_lines.append(_display)
 
-        st.code('\n'.join(display_lines))
+        st.code('\n'.join(display_lines), line_numbers=True)
 
