@@ -23,6 +23,11 @@ def extract_function_definitions(file_content):
         _unindented_match = re.match(r'^\S', _line)
         if _def_match or _deco_match or _unindented_match:
             if _key is not None:
+                # drop trailing empty lines
+                while _buffer and not _buffer[-1].strip():
+                    _buffer.pop()
+                    _line_numbers.pop()
+                # save the previous function definition
                 _snippet = KeySnippet(
                     key=_key,
                     content='\n'.join(_buffer),
