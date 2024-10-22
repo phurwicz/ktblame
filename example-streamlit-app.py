@@ -1,6 +1,7 @@
 import re
 import streamlit as st
-from ktblame import KeySnippet, StreamlitHelper
+from ktblame import KeySnippet
+from ktblame.streamlit import StreamlitHelper
 
 
 st.set_page_config(layout="wide")
@@ -51,7 +52,6 @@ def extract_function_definitions(file_content):
         )
         functions[_key] = _snippet
     return functions
-
 
 
 KV_FUNCTIONS = {
