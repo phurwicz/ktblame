@@ -147,14 +147,20 @@ class StreamlitHelper:
                 if submitted:
                     blamer.extract(file_path, kv_functions[kv_func_key])
 
-            selected_key = st.selectbox("Key", list(blamer.key_to_hexshas.keys()))
-            main_params['selected_key'] = selected_key
-            hexshas = blamer.relevant_hexshas(selected_key)
+            if blamer.key_to_hexshas:
+                selected_key = st.selectbox("Key", list(blamer.key_to_hexshas.keys()), format_func=lambda k: f"({len(blamer.key_to_hexshas[k])}) {k}")
+                main_params['selected_key'] = selected_key
+                hexshas = blamer.relevant_hexshas(selected_key)
+            else:
+                hexshas = []
 
-            if hexshas:
+            if len(hexshas) >= 2:
                 hexsha = st.select_slider("Commit", hexshas, format_func=lambda h: blamer.commits[h].committed_datetime.strftime('%Y-%m-%d %H:%M'))
-
                 main_params['selected_commit'] = blamer.commits[hexsha]
+                main_params['ready_flag'] = True
+            elif len(hexshas) == 1:
+                st.caption("Only one commit available.")
+                main_params['selected_commit'] = blamer.commits[hexshas[0]]
                 main_params['ready_flag'] = True
             else:
                 main_params['ready_flag'] = False
@@ -168,6 +174,7 @@ class StreamlitHelper:
         main_params = StreamlitHelper.default_sidebar(kv_functions)
 
         if not main_params['ready_flag']:
+            st.caption("No commit available. Please check the options in the sidebar.")
             return
 
         blamer = main_params['blamer']
