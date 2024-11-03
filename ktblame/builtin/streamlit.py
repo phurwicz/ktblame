@@ -1,5 +1,5 @@
 import streamlit as st
-from ktblame import KeyTimeBlame
+from .. import KeyTimeBlame
 
 
 class StreamlitHelper:

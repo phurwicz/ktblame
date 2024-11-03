@@ -13,7 +13,7 @@ def get_description():
 
 setuptools.setup(
     name="ktblame",
-    version="0.0.1",
+    version="0.0.2",
     description="Fine-grained git blame tracking custom key-values over time.",
     long_description=get_description(),
     long_description_content_type="text/markdown",
@@ -24,6 +24,7 @@ setuptools.setup(
     install_requires=[
         "gitpython",
         "pydantic",
+        "tqdm",
         "streamlit",
     ],
     python_requires=">=3.10",

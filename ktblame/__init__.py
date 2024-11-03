@@ -8,7 +8,7 @@ from pydantic import BaseModel
 class KeySnippet(BaseModel):
     key: str
     content: str
-    line_numbers: List[int]
+    line_indices: List[int]
 
 
 class KeySnapshot(KeySnippet):
@@ -25,7 +25,7 @@ class FileBlame(BaseModel):
     file_path: str
     hexsha: str
     lineblames: List[LineBlame]
-    changed_line_numbers: Set[int]
+    changed_line_indices: Set[int]
 
 
 class KeyTimeBlame:
@@ -44,7 +44,7 @@ class KeyTimeBlame:
             return
 
         commits = list(self.repo.iter_commits(paths=file_path))
-        for _commit in tqdm(commits):
+        for _commit in tqdm(commits, desc=f"KeyTimeBlame: extracting {file_path}"):
             self.commits[_commit.hexsha] = _commit
 
             # file-level processing
@@ -54,10 +54,10 @@ class KeyTimeBlame:
 
             # key-level processing
             for _k, _ksnippet in _kv_dict.items():
-                _kcontent, _klinenumbers = _ksnippet.content, _ksnippet.line_numbers
+                _kcontent, _klinenumbers = _ksnippet.content, _ksnippet.line_indices
 
                 # detect if the key snippet had a change in this commit
-                if not set(_klinenumbers).intersection(_fileblame.changed_line_numbers):
+                if not set(_klinenumbers).intersection(_fileblame.changed_line_indices):
                     continue
                 
                 self.key_to_hexshas[_k].add(_commit.hexsha)
@@ -67,7 +67,7 @@ class KeyTimeBlame:
                 self.keyhexsha_to_snapshot[_keyhexsha] = KeySnapshot(
                     key=_k,
                     content=_kcontent,
-                    line_numbers=_klinenumbers,
+                    line_indices=_klinenumbers,
                     hexsha=_commit.hexsha,
                     file_path=file_path,
                 )
@@ -91,7 +91,7 @@ class KeyTimeBlame:
             file_path=file_path,
             hexsha=hexsha,
             lineblames=lineblames,
-            changed_line_numbers=changed
+            changed_line_indices=changed
         )
         filehexsha = f"{file_path}@{hexsha}"
         self.filehexsha_to_blame[filehexsha] = fileblame
@@ -99,9 +99,9 @@ class KeyTimeBlame:
 
     def blame(self, key, hexsha):
         snapshot = self.keyhexsha_to_snapshot[f"{key}@{hexsha}"]
-        file_path, line_numbers = snapshot.file_path, snapshot.line_numbers
+        file_path, line_indices = snapshot.file_path, snapshot.line_indices
         fileblame = self.filehexsha_to_blame[f"{file_path}@{hexsha}"]
-        lines = [fileblame.lineblames[i] for i in line_numbers]
+        lines = [fileblame.lineblames[i] for i in line_indices]
         return lines
 
     def relevant_hexshas(self, key):
